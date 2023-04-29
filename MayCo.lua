@@ -1,8 +1,9 @@
 local function MayCoSort(memberFrame1, memberFrame2)
   local roleOrder = {
-    ["TANK"] = 1,
-    ["HEALER"] = 3,
-    ["DAMAGER"] = 2
+    ["TANK"] = 3,
+    ["HEALER"] = 1,
+    ["DAMAGER"] = 2,
+    ["NONE"] = 4
   }
 
   local unitName1 = memberFrame1:GetName().."Name"
@@ -15,6 +16,10 @@ local function MayCoSort(memberFrame1, memberFrame2)
   local role2 = UnitGroupRolesAssigned(memberFrame2.unit)
 
   if (name1 and name2) then
+      print("Comparing: ", name1, name2)
+      print("Roles: ", role1, role2)
+      print("Role order: ", roleOrder[role1], roleOrder[role2])
+
       -- If the roles are the same, fall back to sorting alphabetically
       if roleOrder[role1] == roleOrder[role2] then
           return strlower(name1) < strlower(name2)
@@ -25,15 +30,16 @@ local function MayCoSort(memberFrame1, memberFrame2)
 end
 
 local function myUpdateLayoutFunc(frame)
-  if frame and frame:GetName() == "CompactRaidGroup1" then
-    print("This is the first raid group")
+  -- If the frame name starts with CompactRaidGroup
+  local frameName = frame:GetName()
+  if frameName and frameName:match("^CompactRaidGroup%d+$") then
+    print("Updating frame: ", frameName)
 
     -- Clear existing positioning
     frame:ClearAllPoints()
 
     -- Change the group title to "Bananas"
     local title = _G[frame:GetName().."Title"]
-    title:SetText("Bananas")
 
     -- Get all of the member frames into an array
     local members = {}
@@ -73,6 +79,48 @@ local function myUpdateLayoutFunc(frame)
     end
   end
 end
+
+local frame = CreateFrame("FRAME")
+frame:RegisterEvent("GROUP_ROSTER_UPDATE")
+frame:SetScript("OnEvent", function(self, event, ...)
+  if event == "GROUP_ROSTER_UPDATE" then
+    C_Timer.After(0.5, function()
+
+
+    -- START EVENT HANDLE
+    -- Print the frame that was updated
+    -- Iterate through groups 1 - 8
+    for i=1, 8 do
+      local frame = _G["CompactRaidGroup"..i]
+
+      if frame then
+        -- Iterate each child of the frame and increment a counter if
+        -- it starts with CombatRaidGroupiMember
+        local numMembers = 0
+        for j=1, frame:GetNumChildren() do
+          local child = select(j, frame:GetChildren())
+          if string.find(child:GetName(), "CompactRaidGroup"..i.."Member") then
+            -- Anmd that child has a unit attached
+            if child.unit then
+              numMembers = numMembers + 1
+            end
+
+          end
+        end
+
+        print("Group "..i.." has "..numMembers.." members")
+        myUpdateLayoutFunc(frame)
+      end
+
+
+
+    end
+
+    -- myUpdateLayoutFunc()
+    end)
+  end
+  -- END EVENT HANDLE
+end)
 
 hooksecurefunc("CompactRaidGroup_UpdateLayout", myUpdateLayoutFunc)
 print("Hi, I'am MayCo! <3")
