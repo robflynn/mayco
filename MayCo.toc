@@ -1,0 +1,7 @@
+## Interface: 90005
+## Title: MayCo
+## Author: Maymay
+## Version: 0.69
+
+MayCo.lua
+
